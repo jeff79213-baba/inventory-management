@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>庫存管理系統</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">庫存管理系統</a>
+    <div class="navbar-links">
+      <a href="index.html"><strong>庫存列表</strong></a>
+      <a href="settings.html">後台設定</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- 搜尋列 -->
+    <div class="search-bar">
+      <input type="text" id="searchInput" class="form-input" placeholder="搜尋品項名稱..." oninput="filterItems()">
+      <button class="btn btn-primary" onclick="openAddModal()">+ 新增品項</button>
+    </div>
+
+    <!-- 庫存表格 -->
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px">照片</th>
+              <th>品項名稱</th>
+              <th id="attrHeader">屬性</th>
+              <th style="width:80px">數量</th>
+              <th>擺放位置</th>
+              <th style="width:100px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="itemsList">
+            <tr><td colspan="6" class="loading">載入中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/編輯品項模態框 -->
+  <div id="itemModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">新增品項</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="itemId">
+
+        <!-- 品項名稱 -->
+        <div class="form-group">
+          <label class="form-label">品項名稱 *</label>
+          <input type="text" id="itemName" class="form-input" placeholder="輸入品項名稱" required>
+        </div>
+
+        <!-- 照片上傳 -->
+        <div class="form-group">
+          <label class="form-label">照片（選填）</label>
+          <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+            <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)">
+            <img id="photoPreview" class="photo-preview" style="display:none">
+            <p id="photoHint" class="help-text">點擊上傳照片，或拖曳圖片到此處</p>
+          </div>
+        </div>
+
+        <!-- 動態欄位區塊 -->
+        <div id="dynamicFields" class="dynamic-fields" style="display:none">
+          <div class="dynamic-fields-title">品項屬性</div>
+          <div id="dynamicFieldsContent"></div>
+        </div>
+
+        <!-- 數量 -->
+        <div class="form-group">
+          <label class="form-label">數量 *</label>
+          <input type="number" id="itemQty" class="form-input" min="0" value="1">
+        </div>
+
+        <!-- 擺放位置 -->
+        <div class="form-group">
+          <label class="form-label">擺放位置</label>
+          <input type="text" id="itemLocation" class="form-input" placeholder="例如：A架第三層、倉庫B區">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveItem()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 確認刪除模態框 -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header">
+        <h3 class="modal-title">確認刪除</h3>
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>確定要刪除「<span id="deleteItemName"></span>」嗎？</p>
+        <p class="help-text">此操作無法復原。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">刪除</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
