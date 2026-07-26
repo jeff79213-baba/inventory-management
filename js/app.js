@@ -152,12 +152,13 @@ function renderSettingsEdit(area) {
       `).join('')}
     </div>
     <div style="padding:12px 0;border-top:1px solid var(--gray-200)">
-      <label class="form-label">新增選項（每行一個）</label>
-      <textarea id="newOptionsText" class="form-input" rows="3" placeholder="灰色&#10;金色&#10;銀色" style="margin-top:4px"></textarea>
+      <label class="form-label">新增選項（用 - 分隔，例：紅色-黃色-綠色）</label>
+      <input type="text" id="newOptionsText" class="form-input" placeholder="紅色-黃色-綠色" style="margin-top:4px">
       <button class="btn btn-outline btn-sm" onclick="addOptions()" style="margin-top:8px">+ 加入</button>
     </div>
   `;
   setupDragSort();
+  addDataTools();
 }
 
 function editOptionText(span, index) {
@@ -204,7 +205,7 @@ function addOptions() {
   if (!text) return;
   const field = allFields.find(f => f.id === currentSelection);
   if (!field) return;
-  const newOpts = text.split('\n').map(s => s.trim()).filter(s => s);
+  const newOpts = text.split('-').map(s => s.trim()).filter(s => s);
   if (newOpts.length === 0) return;
   field.options.push(...newOpts);
   document.getElementById('newOptionsText').value = '';
@@ -215,9 +216,10 @@ async function saveFieldOptions() {
   const field = allFields.find(f => f.id === currentSelection);
   if (!field) return;
   try {
-    await DB.instance.collection(DB.FIELDS).doc(field.id).update({
+    await DB.instance.collection(DB.FIELDS).doc(field.id).set({
+      name: field.name,
       options: field.options
-    });
+    }, { merge: true });
     showStatus('✓ 儲存成功', 'success');
   } catch (e) {
     console.error('儲存失敗:', e);
@@ -329,8 +331,8 @@ function openAddField() {
       <button class="btn btn-primary" onclick="saveNewField()">儲存</button>
     </div>
     <div style="padding:12px 0">
-      <label class="form-label">選項（每行一個）</label>
-      <textarea id="newFieldOptions" class="form-input" rows="5" placeholder="紅色&#10;藍色&#10;白色" style="margin-top:4px"></textarea>
+      <label class="form-label">選項（用 - 分隔，例：紅色-黃色-綠色）</label>
+      <input type="text" id="newFieldOptions" class="form-input" placeholder="紅色-黃色-綠色" style="margin-top:4px">
     </div>
   `;
 }
@@ -339,7 +341,7 @@ async function saveNewField() {
   const name = document.getElementById('newFieldName')?.value?.trim();
   if (!name) { alert('請輸入欄位名稱'); return; }
   const optionsText = document.getElementById('newFieldOptions')?.value?.trim();
-  const options = optionsText ? optionsText.split('\n').map(s => s.trim()).filter(s => s) : [];
+  const options = optionsText ? optionsText.split('-').map(s => s.trim()).filter(s => s) : [];
   try {
     await DB.instance.collection(DB.FIELDS).doc(name).set({
       name,
@@ -466,4 +468,94 @@ async function saveNewItem() {
     console.error('新增失敗:', e);
     showStatus('✗ 新增失敗', 'error');
   }
+}
+
+// === 資料匯入匯出 ===
+function addDataTools() {
+  const area = document.getElementById('editArea');
+  if (currentMode !== 'settings') return;
+  const toolsHtml = `
+    <div style="margin-top:16px;padding:16px;border-top:2px solid var(--gray-200);display:flex;gap:12px;align-items:center">
+      <span style="font-weight:600;font-size:0.9rem;color:var(--gray-700)">資料管理：</span>
+      <button class="btn btn-outline btn-sm" onclick="exportAllData()">📥 匯出全部資料</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFileInput').click()">📤 匯入資料</button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  `;
+  // Append tools after edit area content (if not already there)
+  if (!document.getElementById('importFileInput')) {
+    area.insertAdjacentHTML('beforeend', toolsHtml);
+  }
+}
+
+async function exportAllData() {
+  try {
+    const [itemsSnap, fieldsSnap] = await Promise.all([
+      DB.instance.collection(DB.ITEMS).orderBy('name').get(),
+      DB.instance.collection(DB.FIELDS).orderBy('name').get()
+    ]);
+    const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const fields = fieldsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const data = { exportDate: new Date().toISOString(), items, fields };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `庫存管理備份_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showStatus('✓ 匯出成功', 'success');
+  } catch (e) {
+    console.error('匯出失敗:', e);
+    showStatus('✗ 匯出失敗', 'error');
+  }
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.items && !data.fields) {
+        alert('檔案格式錯誤：找不到 items 或 fields 資料');
+        return;
+      }
+      const db = DB.instance;
+      let imported = 0;
+      // Import items
+      if (data.items && Array.isArray(data.items)) {
+        for (const item of data.items) {
+          const { id, ...itemData } = item;
+          if (id) {
+            await db.collection(DB.ITEMS).doc(id).set(itemData);
+          } else {
+            await db.collection(DB.ITEMS).add(itemData);
+          }
+          imported++;
+        }
+      }
+      // Import fields
+      if (data.fields && Array.isArray(data.fields)) {
+        for (const field of data.fields) {
+          const { id, ...fieldData } = field;
+          await db.collection(DB.FIELDS).doc(id || fieldData.name).set(fieldData);
+          imported++;
+        }
+      }
+      // Reload
+      await loadAllData();
+      renderCapsules();
+      renderEditArea();
+      showStatus(`✓ 匯入完成（${imported} 筆）`, 'success');
+    } catch (err) {
+      console.error('匯入失敗:', err);
+      alert('匯入失敗：' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
