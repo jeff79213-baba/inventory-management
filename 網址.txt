@@ -5,7 +5,7 @@ https://github.com/jeff79213-baba/inventory-management
 https://jeff79213-baba.github.io/inventory-management/
 
 --- Firebase Hosting ---
-https://opencode-sk.web.app
+https://inventory-sk.web.app
 
 --- 本地路徑 ---
 C:\Users\TW-10\Documents\firebase雲端資料夾\庫存管理

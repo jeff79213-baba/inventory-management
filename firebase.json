@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "inventory-sk",
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
