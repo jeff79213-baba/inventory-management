@@ -2,10 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // 庫存管理系統規則
-    match /inv_settings/{docId} {
+    match /inv_items/{docId} {
       allow read, write: if true;
     }
-    match /inv_items/{docId} {
+    match /inv_fields/{docId} {
       allow read, write: if true;
     }
   }
