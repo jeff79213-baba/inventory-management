@@ -1,4 +1,5 @@
 async function migrateFields() {
+  const db = DB.instance;
   const doc = await db.doc('inv_settings/global').get();
   if (!doc.exists) return;
   const fields = doc.data().fields || [];
