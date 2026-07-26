@@ -1,4 +1,4 @@
-/* 重置 + 變數保留原本 */
+/* 重置 + 變數 */
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
@@ -23,7 +23,7 @@ body {
   color: var(--gray-900);
   line-height: 1.5;
 }
-.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
 /* 導航 + 模式切換 */
 .navbar {
@@ -61,7 +61,7 @@ body {
   font-size: 1rem;
 }
 
-/* 膠囊區 */
+/* 名稱膠囊區 */
 .capsule-area {
   display: flex;
   flex-wrap: wrap;
@@ -105,6 +105,247 @@ body {
   border: none;
 }
 
+/* 欄位膠囊選區 */
+.field-select-area {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.field-select-area .field-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+.field-select-area .field-row:last-child {
+  border-bottom: none;
+}
+.field-label {
+  min-width: 70px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--gray-700);
+  padding-top: 4px;
+}
+.field-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+.option-capsule {
+  padding: 4px 12px;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.option-capsule:hover { background: var(--gray-100); }
+.option-capsule.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* 分隔線 */
+.field-divider {
+  width: 3px;
+  background: var(--gray-900);
+  border-radius: 2px;
+  align-self: stretch;
+  min-height: 40px;
+}
+
+/* 輸入區 */
+.input-area {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+.input-area .form-group { flex: 1 1 150px; }
+.input-area .form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
+/* 表格區 */
+.table-area {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  overflow-x: auto;
+}
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.data-table th {
+  background: var(--gray-100);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--gray-700);
+  border-bottom: 2px solid var(--gray-300);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+.data-table tr:hover { background: var(--gray-100); }
+.data-table .col-actions {
+  display: flex;
+  gap: 4px;
+}
+.data-table .btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+.data-table .btn-icon:hover { color: var(--gray-900); }
+
+/* 後台設定：欄位列表 */
+.field-list {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.field-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.field-list-item:hover { border-color: var(--primary); }
+.field-list-item.active {
+  border-color: var(--primary);
+  background: rgba(37, 99, 235, 0.05);
+}
+.field-list-item .drag-handle {
+  cursor: grab;
+  color: var(--gray-500);
+  user-select: none;
+  font-size: 1.1rem;
+}
+.field-list-item .field-name {
+  flex: 1;
+  font-weight: 500;
+}
+.field-list-item .field-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+.field-list-item .field-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.field-list-item .btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+.field-list-item .btn-icon:hover { color: var(--danger); }
+
+/* 後台設定：選項管理 */
+.options-panel {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.options-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.options-panel .panel-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.options-panel .option-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.options-panel .option-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 16px;
+  font-size: 0.85rem;
+}
+.options-panel .option-tag .drag-handle {
+  cursor: grab;
+  color: var(--gray-500);
+  user-select: none;
+}
+.options-panel .option-tag .option-text {
+  cursor: pointer;
+}
+.options-panel .option-tag .option-text:hover {
+  color: var(--primary);
+}
+.options-panel .option-tag .btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+.options-panel .option-tag .btn-delete:hover { color: var(--danger); }
+.options-panel .add-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.options-panel .add-row .form-group { flex: 1; }
+.options-panel .add-row .form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+}
+
 /* 編輯區 */
 .edit-area {
   background: white;
@@ -122,83 +363,8 @@ body {
 }
 .edit-title { font-size: 1.1rem; font-weight: 600; }
 
-/* 欄位區塊 — flex-wrap 橫排 */
-.field-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.field-block {
-  flex: 1 1 200px;
-  min-width: 180px;
-  background: var(--gray-100);
-  border-radius: var(--radius);
-  padding: 12px;
-}
-.field-block-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--gray-700);
-}
-.field-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.option-capsule {
-  padding: 4px 12px;
-  background: white;
-  border: 1px solid var(--gray-300);
-  border-radius: 16px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.option-capsule.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
-
-/* 底部資訊列 */
-.edit-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
-  padding-top: 16px;
-  border-top: 1px solid var(--gray-200);
-}
-.edit-footer .form-group { flex: 1 1 180px; }
-.edit-footer .form-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-}
-.photo-block { text-align: center; }
-.photo-block img { max-width: 120px; max-height: 120px; border-radius: 4px; }
-.photo-path { font-size: 0.75rem; color: var(--gray-500); word-break: break-all; margin-top: 4px; }
-
 /* 空狀態 */
 .empty-state { text-align: center; padding: 40px; color: var(--gray-500); }
-
-/* settings 專用：膠囊工具列 */
-.capsule-tools { display: inline-flex; gap: 4px; margin-left: 4px; }
-.capsule-tools button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-  padding: 2px;
-  color: var(--gray-500);
-  line-height: 1;
-}
-.capsule-tools button:hover { color: var(--gray-900); }
-.drag-handle { cursor: grab; color: var(--gray-500); }
 
 /* 按鈕 */
 .btn {
@@ -256,5 +422,6 @@ body {
 @media (max-width: 768px) {
   .container { padding: 12px; }
   .navbar { flex-direction: column; gap: 8px; }
-  .field-block { flex: 1 1 100%; min-width: 0; }
+  .field-select-area .field-row { flex-direction: column; }
+  .field-divider { display: none; }
 }

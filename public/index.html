@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <!-- 頂部導航 -->
   <nav class="navbar">
     <a href="#" class="navbar-brand">庫存管理系統</a>
     <div class="mode-toggle">
@@ -17,21 +16,19 @@
   </nav>
 
   <div class="container">
-    <!-- 第一層：搜尋列 -->
     <div class="search-bar">
-      <input type="text" id="searchInput" class="form-input" placeholder="搜尋..."
-             oninput="onSearch(this.value)">
+      <input type="text" id="searchInput" class="form-input" placeholder="搜尋..." oninput="onSearch(this.value)">
     </div>
 
-    <!-- 第二層：名稱膠囊區 -->
-    <div id="capsuleArea" class="capsule-area">
-      <!-- 動態產生 -->
-    </div>
+    <div id="capsuleArea" class="capsule-area"></div>
 
-    <!-- 第三層：編輯區 -->
-    <div id="editArea" class="edit-area">
-      <div class="empty-state">請選擇上方品項</div>
-    </div>
+    <div id="fieldSelectArea" class="field-select-area" style="display:none"></div>
+
+    <div id="inputArea" class="input-area" style="display:none"></div>
+
+    <div id="settingsArea"></div>
+
+    <div id="tableArea" class="table-area" style="display:none"></div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
