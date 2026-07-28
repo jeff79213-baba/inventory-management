@@ -114,26 +114,25 @@ body {
 }
 .field-select-area .field-row {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--gray-200);
-}
-.field-select-area .field-row:last-child {
-  border-bottom: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  flex: 1;
+  min-width: 100px;
 }
 .field-label {
-  min-width: 70px;
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--gray-700);
-  padding-top: 4px;
+  text-align: center;
+  white-space: nowrap;
 }
 .field-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  flex: 1;
+  justify-content: center;
 }
 .option-capsule {
   padding: 4px 12px;

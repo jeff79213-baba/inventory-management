@@ -147,7 +147,7 @@ function renderFieldSelectArea() {
         ${isEditing ? '<button class="btn btn-outline btn-sm" onclick="cancelEdit()">取消</button>' : ''}
       </div>
     </div>
-    <div style="display:flex;gap:0;align-items:stretch">${fieldRows}</div>
+    <div style="display:flex;gap:0;flex-wrap:wrap;align-items:flex-start">${fieldRows}</div>
   `;
   area.style.display = 'block';
 
