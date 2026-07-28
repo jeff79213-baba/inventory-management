@@ -40,6 +40,7 @@ function switchMode(mode) {
   document.getElementById('settingsArea').innerHTML = '';
   renderCapsules();
   if (mode === 'inventory') renderTable();
+  if (mode === 'settings') renderSettingsPanel();
 }
 
 function onSearch(query) {
@@ -383,6 +384,14 @@ function renderFieldList(area) {
         <button class="btn btn-primary btn-sm" onclick="openAddField()">+ 新增欄位</button>
       </div>
       <div id="fieldListContainer">${items}</div>
+    </div>
+    <div class="field-list">
+      <div style="font-weight:600;font-size:1rem;margin-bottom:12px">資料管理</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="exportBackup()">⬇ 匯出備份</button>
+        <button class="btn btn-outline btn-sm" onclick="triggerImport()">⬆ 匯入還原</button>
+      </div>
+      <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImportFile(event)">
     </div>
   `;
   setupFieldDragSort();
