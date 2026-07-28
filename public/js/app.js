@@ -220,6 +220,20 @@ function cancelEdit() {
   document.getElementById('inputArea').style.display = 'none';
 }
 
+function fieldsEqual(a, b) {
+  const ka = Object.keys(a).sort(), kb = Object.keys(b).sort();
+  if (ka.length !== kb.length) return false;
+  for (let i = 0; i < ka.length; i++) {
+    if (ka[i] !== kb[i]) return false;
+    if (JSON.stringify(a[ka[i]]) !== JSON.stringify(b[ka[i]])) return false;
+  }
+  return true;
+}
+
+function findDuplicateUnit(itemName, fields, excludeId) {
+  return allUnits.find(u => u.itemName === itemName && fieldsEqual(u.fields, fields) && u.id !== excludeId) || null;
+}
+
 async function saveUnit() {
   if (!selectedItemName) { alert('請先選擇品項名稱'); return; }
   const visibleFields = allFields.filter(f => f.showInList);
@@ -241,8 +255,24 @@ async function saveUnit() {
       await DB.instance.collection(DB.UNITS).doc(editingUnitId).update(data);
       editingUnitId = null;
     } else {
-      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await DB.instance.collection(DB.UNITS).add(data);
+      const dup = findDuplicateUnit(selectedItemName, fields, null);
+      if (dup) {
+        const msg = `已有相同內容的資料（位置：${dup.location || '未填'}），是否要累加數量？\n（目前數量：${dup.quantity}，新數量：${quantity}，合計：${dup.quantity + quantity}）`;
+        if (confirm(msg)) {
+          await DB.instance.collection(DB.UNITS).doc(dup.id).update({
+            quantity: dup.quantity + quantity,
+            location: location || dup.location,
+            note: note || dup.note
+          });
+          if (selectedPhoto) await DB.instance.collection(DB.UNITS).doc(dup.id).update({ photo: selectedPhoto });
+        } else {
+          data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+          await DB.instance.collection(DB.UNITS).add(data);
+        }
+      } else {
+        data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+        await DB.instance.collection(DB.UNITS).add(data);
+      }
     }
     selectedAttrs = {};
     selectedPhoto = null;

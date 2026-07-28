@@ -70,7 +70,17 @@ async function handleImportFile(e) {
         ...rest, createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
+    const merged = new Map();
     for (const unit of backup.data.units) {
+      const key = unit.itemName + '||' + JSON.stringify(unit.fields || {});
+      if (merged.has(key)) {
+        const exist = merged.get(key);
+        exist.quantity = (exist.quantity || 0) + (unit.quantity || 0);
+      } else {
+        merged.set(key, { ...unit });
+      }
+    }
+    for (const unit of merged.values()) {
       const { id, createdAt, ...rest } = unit;
       await db.collection(DB.UNITS).doc(id).set({
         ...rest, createdAt: firebase.firestore.FieldValue.serverTimestamp()
