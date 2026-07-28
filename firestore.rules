@@ -8,5 +8,8 @@ service cloud.firestore {
     match /inv_fields/{docId} {
       allow read, write: if true;
     }
+    match /inv_units/{docId} {
+      allow read, write: if true;
+    }
   }
 }

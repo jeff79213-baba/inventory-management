@@ -68,7 +68,7 @@ function showStatus(msg, cls) {
   const el = document.createElement('span');
   el.className = `save-status ${cls}`;
   el.textContent = msg;
-  const header = document.querySelector('.edit-header');
+  const header = document.querySelector('.edit-header') || document.querySelector('.field-list') || document.querySelector('.navbar');
   if (header) header.appendChild(el);
   setTimeout(() => { if (el.parentNode) el.remove(); }, 2000);
 }
