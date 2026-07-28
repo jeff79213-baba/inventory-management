@@ -5,6 +5,8 @@ let allItems = [];
 let allUnits = [];
 let selectedItemName = null;
 let selectedAttrs = {};
+let selectedPhoto = null;
+let editingUnitId = null;
 let _dragSrcIndex = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -29,6 +31,8 @@ function switchMode(mode) {
   currentSelection = null;
   selectedItemName = null;
   selectedAttrs = {};
+  selectedPhoto = null;
+  editingUnitId = null;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   document.getElementById('searchInput').value = '';
   document.getElementById('searchInput').placeholder = mode === 'inventory'
@@ -133,10 +137,15 @@ function renderFieldSelectArea() {
     `;
   }).join('');
 
+  const isEditing = !!editingUnitId;
+  const saveBtnLabel = isEditing ? '更新單位' : '儲存單位';
   area.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="font-weight:600;font-size:1rem">${escapeHtml(selectedItemName)}</div>
-      <button class="btn btn-primary" onclick="saveUnit()">儲存單位</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="saveUnit()">${saveBtnLabel}</button>
+        ${isEditing ? '<button class="btn btn-outline btn-sm" onclick="cancelEdit()">取消</button>' : ''}
+      </div>
     </div>
     <div style="display:flex;gap:0;align-items:stretch">${fieldRows}</div>
   `;
@@ -156,6 +165,11 @@ function renderFieldSelectArea() {
       <label class="form-label">備註</label>
       <input type="text" class="form-input" id="unitNote" placeholder="選填">
     </div>
+    <div class="form-group">
+      <label class="form-label">照片</label>
+      <input type="file" accept="image/*" onchange="handlePhotoSelect(event)" style="font-size:0.85rem">
+      <div id="photoPreview" style="margin-top:6px"></div>
+    </div>
   `;
   inputArea.style.display = 'flex';
 }
@@ -174,6 +188,38 @@ function toggleFieldOption(encodedFieldId, encodedValue) {
   renderFieldSelectArea();
 }
 
+function handlePhotoSelect(e) {
+  const file = e.target.files[0];
+  if (!file) { selectedPhoto = null; document.getElementById('photoPreview').innerHTML = ''; return; }
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const maxW = 300, maxH = 300;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      if (h > maxH) { w = w * maxH / h; h = maxH; }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      selectedPhoto = c.toDataURL('image/jpeg', 0.6);
+      document.getElementById('photoPreview').innerHTML = `<img src="${selectedPhoto}" style="max-width:150px;max-height:150px;border-radius:6px;border:1px solid #ddd">`;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function cancelEdit() {
+  editingUnitId = null;
+  selectedPhoto = null;
+  selectedAttrs = {};
+  renderFieldSelectArea();
+  document.getElementById('inputArea').innerHTML = '';
+  document.getElementById('inputArea').style.display = 'none';
+}
+
 async function saveUnit() {
   if (!selectedItemName) { alert('請先選擇品項名稱'); return; }
   const visibleFields = allFields.filter(f => f.showInList);
@@ -189,15 +235,17 @@ async function saveUnit() {
   const location = document.getElementById('unitLocation')?.value?.trim() || '';
   const note = document.getElementById('unitNote')?.value?.trim() || '';
   try {
-    await DB.instance.collection(DB.UNITS).add({
-      itemName: selectedItemName,
-      fields,
-      quantity,
-      location,
-      note,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    const data = { itemName: selectedItemName, fields, quantity, location, note };
+    if (selectedPhoto) data.photo = selectedPhoto;
+    if (editingUnitId) {
+      await DB.instance.collection(DB.UNITS).doc(editingUnitId).update(data);
+      editingUnitId = null;
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await DB.instance.collection(DB.UNITS).add(data);
+    }
     selectedAttrs = {};
+    selectedPhoto = null;
     await loadAllData();
     renderFieldSelectArea();
     renderTable();
@@ -217,19 +265,24 @@ function renderTable() {
     area.style.display = 'block';
     return;
   }
+  const hasPhoto = allUnits.some(u => u.photo);
   const headers = visibleFields.map(f => `<th>${escapeHtml(f.name)}</th>`).join('');
+  const photoTh = hasPhoto ? '<th>照片</th>' : '';
   const rows = allUnits.map(unit => {
     const cells = visibleFields.map(f => {
       const vals = (unit.fields && unit.fields[f.name]) || [];
       return `<td>${escapeHtml(vals.join(', '))}</td>`;
     }).join('');
+    const photoTd = hasPhoto ? `<td>${unit.photo ? `<img src="${unit.photo}" style="width:50px;height:50px;object-fit:cover;border-radius:4px">` : ''}</td>` : '';
     return `<tr>
       <td>${escapeHtml(unit.itemName)}</td>
       ${cells}
+      ${photoTd}
       <td>${unit.quantity || 0}</td>
       <td>${escapeHtml(unit.location || '')}</td>
       <td>${escapeHtml(unit.note || '')}</td>
       <td class="col-actions">
+        <button class="btn-icon" onclick="editUnit('${unit.id}')" title="編輯">✏️</button>
         <button class="btn-icon" onclick="deleteUnit('${unit.id}')" title="刪除">🗑️</button>
       </td>
     </tr>`;
@@ -240,6 +293,7 @@ function renderTable() {
         <tr>
           <th>名稱</th>
           ${headers}
+          ${photoTh}
           <th>數量</th>
           <th>位置</th>
           <th>備註</th>
@@ -250,6 +304,32 @@ function renderTable() {
     </table>
   `;
   area.style.display = 'block';
+}
+
+function editUnit(id) {
+  const unit = allUnits.find(u => u.id === id);
+  if (!unit) return;
+  cancelEdit();
+  editingUnitId = id;
+  selectedItemName = unit.itemName;
+  selectedAttrs = {};
+  const visibleFields = allFields.filter(f => f.showInList);
+  for (const f of visibleFields) {
+    const vals = (unit.fields && unit.fields[f.name]) || [];
+    if (vals.length > 0) selectedAttrs[f.id] = vals;
+  }
+  selectedPhoto = unit.photo || null;
+  renderCapsules(document.getElementById('searchInput').value);
+  renderFieldSelectArea();
+  const qtyInput = document.getElementById('unitQty');
+  if (qtyInput) qtyInput.value = unit.quantity || 0;
+  const locInput = document.getElementById('unitLocation');
+  if (locInput) locInput.value = unit.location || '';
+  const noteInput = document.getElementById('unitNote');
+  if (noteInput) noteInput.value = unit.note || '';
+  if (unit.photo) {
+    document.getElementById('photoPreview').innerHTML = `<img src="${unit.photo}" style="max-width:150px;max-height:150px;border-radius:6px;border:1px solid #ddd">`;
+  }
 }
 
 async function deleteUnit(id) {
@@ -348,7 +428,7 @@ function renderSettingsPanel() {
       <div class="panel-header">
         <div class="panel-title">${escapeHtml(field.name)} — 選項管理</div>
         <button class="btn btn-outline btn-sm" onclick="currentSelection=null;renderSettingsPanel()">← 返回欄位列表</button>
-      <button class="btn btn-primary btn-sm" onclick="saveFieldOptions()">儲存選項</button>
+        <button class="btn btn-primary btn-sm" onclick="saveFieldOptions()">儲存選項</button>
       </div>
       <div class="option-list" id="optionList">${optionTags}</div>
       <div class="add-row">

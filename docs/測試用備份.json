@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "exportedAt": "2026-07-28T12:00:00.000Z",
+  "data": {
+    "items": [
+      { "id": "實木貼皮圓形托盤", "name": "實木貼皮圓形托盤" },
+      { "id": "蝶谷巴特方形杯墊", "name": "蝶谷巴特方形杯墊" },
+      { "id": "復古花磚隔熱墊", "name": "復古花磚隔熱墊" }
+    ],
+    "fields": [
+      {
+        "id": "直徑",
+        "name": "直徑",
+        "options": ["10cm", "15cm", "20cm", "30cm"],
+        "order": 0,
+        "showInList": true
+      },
+      {
+        "id": "材質",
+        "name": "材質",
+        "options": ["實木貼皮", "陶瓷", "矽膠", "不鏽鋼"],
+        "order": 1,
+        "showInList": true
+      },
+      {
+        "id": "顏色",
+        "name": "顏色",
+        "options": ["原木色", "白色", "黑色", "復古棕", "花磚"],
+        "order": 2,
+        "showInList": true
+      }
+    ],
+    "units": [
+      {
+        "id": "test-u1",
+        "itemName": "實木貼皮圓形托盤",
+        "fields": { "直徑": ["20cm"], "材質": ["實木貼皮"], "顏色": ["原木色"] },
+        "quantity": 5,
+        "location": "A-01",
+        "note": "熱銷品"
+      },
+      {
+        "id": "test-u2",
+        "itemName": "實木貼皮圓形托盤",
+        "fields": { "直徑": ["30cm"], "材質": ["實木貼皮"], "顏色": ["復古棕"] },
+        "quantity": 3,
+        "location": "A-02",
+        "note": ""
+      },
+      {
+        "id": "test-u3",
+        "itemName": "蝶谷巴特方形杯墊",
+        "fields": { "直徑": ["10cm"], "材質": ["陶瓷"], "顏色": ["花磚"] },
+        "quantity": 12,
+        "location": "B-01",
+        "note": "新到貨"
+      },
+      {
+        "id": "test-u4",
+        "itemName": "復古花磚隔熱墊",
+        "fields": { "直徑": ["15cm"], "材質": ["矽膠"], "顏色": ["花磚"] },
+        "quantity": 8,
+        "location": "C-01",
+        "note": ""
+      }
+    ]
+  }
+}
