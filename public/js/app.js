@@ -38,7 +38,7 @@ function switchMode(mode) {
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   document.getElementById('searchInput').value = '';
   document.getElementById('searchInput').placeholder = mode === 'inventory'
-    ? '搜尋品項名稱...'
+    ? '搜尋品項名稱、特徵、備註...'
     : '搜尋欄位名稱...';
   document.getElementById('fieldSelectArea').style.display = 'none';
   document.getElementById('inputArea').style.display = 'none';
@@ -51,6 +51,7 @@ function switchMode(mode) {
 
 function onSearch(query) {
   renderCapsules(query);
+  if (currentMode === 'inventory') renderTable(query);
 }
 
 function escapeHtml(str) {
@@ -307,11 +308,26 @@ async function saveUnit() {
   }
 }
 
-function renderTable() {
+function renderTable(searchQuery) {
   if (currentMode !== 'inventory') return;
   const area = document.getElementById('tableArea');
   const visibleFields = allFields.filter(f => f.showInList);
-  const filteredUnits = selectedItemName ? allUnits.filter(u => u.itemName === selectedItemName) : allUnits;
+  let filteredUnits = selectedItemName ? allUnits.filter(u => u.itemName === selectedItemName) : allUnits;
+  const q = (searchQuery || '').toLowerCase().trim();
+  if (q) {
+    filteredUnits = filteredUnits.filter(u => {
+      if ((u.itemName || '').toLowerCase().includes(q)) return true;
+      if (u.fields) {
+        for (const vals of Object.values(u.fields)) {
+          if (vals.some(v => v.toLowerCase().includes(q))) return true;
+        }
+      }
+      if ((u.location || '').toLowerCase().includes(q)) return true;
+      if ((u.note || '').toLowerCase().includes(q)) return true;
+      if (String(u.quantity || 0).includes(q)) return true;
+      return false;
+    });
+  }
   const itemForFilter = selectedItemName ? allItems.find(i => i.name === selectedItemName) : null;
   const assignedIds = (itemForFilter && itemForFilter.fieldIds) || [];
   const tableFields = visibleFields.filter(f => assignedIds.length === 0 || assignedIds.includes(f.id));
