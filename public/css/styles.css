@@ -91,6 +91,20 @@ body {
   color: var(--capsule-active-text);
   border-color: var(--capsule-active);
 }
+.capsule-input {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border: 2px solid var(--primary);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  outline: none;
+  background: white;
+  min-width: 140px;
+}
+.capsule-input:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
 .capsule-add {
   display: inline-flex;
   align-items: center;

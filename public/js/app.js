@@ -7,6 +7,7 @@ let selectedItemName = null;
 let selectedAttrs = {};
 let selectedPhoto = null;
 let editingUnitId = null;
+let settingsSelectedItem = null;
 let _dragSrcIndex = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -33,6 +34,7 @@ function switchMode(mode) {
   selectedAttrs = {};
   selectedPhoto = null;
   editingUnitId = null;
+  settingsSelectedItem = null;
   document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   document.getElementById('searchInput').value = '';
   document.getElementById('searchInput').placeholder = mode === 'inventory'
@@ -128,7 +130,9 @@ function selectItemName(name) {
 
 function renderFieldSelectArea() {
   const area = document.getElementById('fieldSelectArea');
-  const visibleFields = allFields.filter(f => f.showInList);
+  const item = allItems.find(i => i.name === selectedItemName);
+  const assignedIds = (item && item.fieldIds) || [];
+  const visibleFields = allFields.filter(f => f.showInList && (assignedIds.length === 0 || assignedIds.includes(f.id)));
   if (visibleFields.length === 0) {
     area.innerHTML = '<div class="empty-state">請先至後台設定勾選要顯示的欄位</div>';
     area.style.display = 'block';
@@ -308,16 +312,19 @@ function renderTable() {
   const area = document.getElementById('tableArea');
   const visibleFields = allFields.filter(f => f.showInList);
   const filteredUnits = selectedItemName ? allUnits.filter(u => u.itemName === selectedItemName) : allUnits;
+  const itemForFilter = selectedItemName ? allItems.find(i => i.name === selectedItemName) : null;
+  const assignedIds = (itemForFilter && itemForFilter.fieldIds) || [];
+  const tableFields = visibleFields.filter(f => assignedIds.length === 0 || assignedIds.includes(f.id));
   if (filteredUnits.length === 0) {
     area.innerHTML = `<div class="empty-state">${selectedItemName ? `「${escapeHtml(selectedItemName)}」尚無資料` : '尚無存入資料'}</div>`;
     area.style.display = 'block';
     return;
   }
   const hasPhoto = filteredUnits.some(u => u.photo);
-  const headers = visibleFields.map(f => `<th>${escapeHtml(f.name)}</th>`).join('');
+  const headers = tableFields.map(f => `<th>${escapeHtml(f.name)}</th>`).join('');
   const photoTh = hasPhoto ? '<th>照片</th>' : '';
   const rows = filteredUnits.map(unit => {
-    const cells = visibleFields.map(f => {
+    const cells = tableFields.map(f => {
       const vals = (unit.fields && unit.fields[f.name]) || [];
       return `<td>${escapeHtml(vals.join(', '))}</td>`;
     }).join('');
@@ -361,7 +368,9 @@ function editUnit(id) {
   editingUnitId = id;
   selectedItemName = unit.itemName;
   selectedAttrs = {};
-  const visibleFields = allFields.filter(f => f.showInList);
+  const item = allItems.find(i => i.name === unit.itemName);
+  const assignedIds = (item && item.fieldIds) || [];
+  const visibleFields = allFields.filter(f => f.showInList && (assignedIds.length === 0 || assignedIds.includes(f.id)));
   for (const f of visibleFields) {
     const vals = (unit.fields && unit.fields[f.name]) || [];
     if (vals.length > 0) selectedAttrs[f.id] = vals;
@@ -393,32 +402,47 @@ async function deleteUnit(id) {
   }
 }
 
-function openAddItemName() {
-  const area = document.getElementById('settingsArea');
-  area.innerHTML = `
-    <div class="edit-header">
-      <input type="text" id="newItemNameInput" class="form-input" style="max-width:300px;font-size:1.1rem;font-weight:600" placeholder="輸入品項名稱">
-      <button class="btn btn-primary" onclick="saveNewItemName()">儲存</button>
-    </div>
-  `;
+function showInlineInput(container, placeholder, onSave) {
+  const addBtn = container.querySelector('.capsule-add');
+  if (!addBtn) return;
+  const input = document.createElement('input');
+  input.className = 'capsule-input';
+  input.placeholder = placeholder;
+  addBtn.replaceWith(input);
+  input.focus();
+  const finish = async () => {
+    const val = input.value.trim();
+    if (val) {
+      input.disabled = true;
+      await onSave(val);
+    }
+    const newBtn = document.createElement('button');
+    newBtn.className = 'capsule-add';
+    newBtn.textContent = '+';
+    newBtn.onclick = () => showInlineInput(container, placeholder, onSave);
+    input.replaceWith(newBtn);
+  };
+  input.onkeydown = (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); finish(); }
+    if (e.key === 'Escape') { input.value = ''; finish(); }
+  };
+  input.onblur = finish;
 }
 
-async function saveNewItemName() {
-  const name = document.getElementById('newItemNameInput')?.value?.trim();
-  if (!name) { alert('請輸入品項名稱'); return; }
-  try {
-    await DB.instance.collection(DB.ITEMS).doc(name).set({
-      name,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await loadAllData();
-    document.getElementById('settingsArea').innerHTML = '';
-    renderCapsules();
-    showStatus('✓ 新增成功', 'success');
-  } catch (e) {
-    console.error('新增失敗:', e);
-    showStatus('✗ 新增失敗', 'error');
-  }
+function openAddItemName() {
+  showInlineInput(document.getElementById('capsuleArea'), '輸入品項名稱', async (name) => {
+    try {
+      await DB.instance.collection(DB.ITEMS).doc(name).set({
+        name, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await loadAllData();
+      renderCapsules(document.getElementById('searchInput').value);
+      showStatus('✓ 品項已新增', 'success');
+    } catch (e) {
+      console.error('新增品項失敗:', e);
+      showStatus('✗ 新增失敗', 'error');
+    }
+  });
 }
 
 /* ============================================================
@@ -427,15 +451,40 @@ async function saveNewItemName() {
 
 function renderSettingsCapsules(area, query) {
   const q = (query || '').toLowerCase();
-  const filtered = q
-    ? allFields.filter(f => f.name.toLowerCase().includes(q))
-    : allFields;
-  area.innerHTML = filtered.map(f => `
+  const filteredItems = q ? allItems.filter(i => i.name.toLowerCase().includes(q)) : allItems;
+  const filteredFields = q ? allFields.filter(f => f.name.toLowerCase().includes(q)) : allFields;
+  const itemCaps = filteredItems.map(item => `
+    <div class="capsule ${settingsSelectedItem === item.id ? 'active' : ''}"
+         onclick="selectSettingsItem('${encodeURIComponent(item.id)}')">
+      ${escapeHtml(item.name)}
+    </div>
+  `).join('');
+  const fieldCaps = filteredFields.map(f => `
     <div class="capsule ${currentSelection === f.id ? 'active' : ''}"
          onclick="selectField('${encodeURIComponent(f.id)}')">
       ${escapeHtml(f.name)}
     </div>
-  `).join('') + `<button class="capsule-add" onclick="openAddField()">+</button>`;
+  `).join('');
+  area.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:4px;width:100%">
+      <span style="font-size:0.8rem;color:var(--gray-500);font-weight:600;margin-right:4px">品項</span>
+      ${itemCaps}
+      <button class="capsule-add" onclick="openAddItemName()">+</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%">
+      <span style="font-size:0.8rem;color:var(--gray-500);font-weight:600;margin-right:4px">欄位</span>
+      ${fieldCaps}
+      <button class="capsule-add" onclick="openAddField()">+</button>
+    </div>
+  `;
+}
+
+function selectSettingsItem(encodedId) {
+  const id = decodeURIComponent(encodedId);
+  settingsSelectedItem = settingsSelectedItem === id ? null : id;
+  currentSelection = null;
+  renderSettingsCapsules(document.getElementById('capsuleArea'), document.getElementById('searchInput').value);
+  renderSettingsPanel();
 }
 
 function selectField(encodedId) {
@@ -451,6 +500,10 @@ function renderSettingsPanel() {
   document.getElementById('inputArea').style.display = 'none';
   document.getElementById('tableArea').style.display = 'none';
 
+  if (settingsSelectedItem) {
+    renderItemFieldPanel(area);
+    return;
+  }
   if (!currentSelection) {
     renderFieldList(area);
     return;
@@ -586,42 +639,22 @@ async function deleteField(encodedId) {
 }
 
 function openAddField() {
-  const area = document.getElementById('settingsArea');
-  area.innerHTML = `
-    <div class="edit-header">
-      <input type="text" id="newFieldName" class="form-input" style="max-width:300px;font-size:1.1rem;font-weight:600" placeholder="輸入欄位名稱">
-      <button class="btn btn-primary" onclick="saveNewField()">儲存</button>
-    </div>
-    <div style="padding:12px 0">
-      <label class="form-label">選項（用 - 分隔，例：紅色-黃色-綠色）</label>
-      <input type="text" id="newFieldOptions" class="form-input" placeholder="選項A-選項B-選項C" style="margin-top:4px">
-    </div>
-  `;
-}
-
-async function saveNewField() {
-  const name = document.getElementById('newFieldName')?.value?.trim();
-  if (!name) { alert('請輸入欄位名稱'); return; }
-  const optionsText = document.getElementById('newFieldOptions')?.value?.trim();
-  const options = optionsText ? optionsText.split('-').map(s => s.trim()).filter(s => s) : [];
-  const maxOrder = allFields.reduce((max, f) => Math.max(max, f.order || 0), -1);
-  try {
-    await DB.instance.collection(DB.FIELDS).doc(name).set({
-      name,
-      options,
-      order: maxOrder + 1,
-      showInList: true,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await loadAllData();
-    currentSelection = name;
-    renderSettingsCapsules(document.getElementById('capsuleArea'), document.getElementById('searchInput').value);
-    renderSettingsPanel();
-    showStatus('✓ 欄位已新增', 'success');
-  } catch (e) {
-    console.error('新增欄位失敗:', e);
-    showStatus('✗ 新增失敗', 'error');
-  }
+  showInlineInput(document.getElementById('capsuleArea'), '輸入欄位名稱', async (name) => {
+    const maxOrder = allFields.reduce((max, f) => Math.max(max, f.order || 0), -1);
+    try {
+      await DB.instance.collection(DB.FIELDS).doc(name).set({
+        name, options: [], order: maxOrder + 1, showInList: true,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await loadAllData();
+      renderSettingsCapsules(document.getElementById('capsuleArea'), document.getElementById('searchInput').value);
+      renderSettingsPanel();
+      showStatus('✓ 欄位已新增', 'success');
+    } catch (e) {
+      console.error('新增欄位失敗:', e);
+      showStatus('✗ 新增失敗', 'error');
+    }
+  });
 }
 
 function editOptionText(span, index) {
@@ -690,6 +723,43 @@ async function saveFieldOptions() {
   } catch (e) {
     console.error('儲存失敗:', e);
     showStatus('✗ 儲存失敗', 'error');
+  }
+}
+
+function renderItemFieldPanel(area) {
+  const item = allItems.find(i => i.id === settingsSelectedItem);
+  if (!item) return;
+  const assigned = item.fieldIds || [];
+  const fieldChecks = allFields.map(f => `
+    <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--gray-200);border-radius:var(--radius);cursor:pointer;margin:4px">
+      <input type="checkbox" ${assigned.includes(f.id) ? 'checked' : ''} onchange="toggleItemField('${encodeURIComponent(item.id)}','${encodeURIComponent(f.id)}',this.checked)">
+      ${escapeHtml(f.name)}
+    </label>
+  `).join('');
+  area.innerHTML = `
+    <div class="field-list">
+      <div style="font-weight:600;font-size:1rem;margin-bottom:12px">${escapeHtml(item.name)} — 適用欄位</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">${fieldChecks}</div>
+      <div style="margin-top:12px;font-size:0.85rem;color:var(--gray-500)">勾選的欄位會在庫存列表中顯示（未設定的品項顯示全部欄位）</div>
+    </div>
+  `;
+}
+
+async function toggleItemField(encodedItemId, encodedFieldId, checked) {
+  const itemId = decodeURIComponent(encodedItemId);
+  const fieldId = decodeURIComponent(encodedFieldId);
+  const item = allItems.find(i => i.id === itemId);
+  if (!item) return;
+  if (!item.fieldIds) item.fieldIds = [];
+  if (checked) {
+    if (!item.fieldIds.includes(fieldId)) item.fieldIds.push(fieldId);
+  } else {
+    item.fieldIds = item.fieldIds.filter(id => id !== fieldId);
+  }
+  try {
+    await DB.instance.collection(DB.ITEMS).doc(itemId).update({ fieldIds: item.fieldIds });
+  } catch (e) {
+    console.error('更新失敗:', e);
   }
 }
 
