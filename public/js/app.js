@@ -233,6 +233,19 @@ function handlePhotoSelect(e) {
   reader.readAsDataURL(file);
 }
 
+function showPhoto(unitId) {
+  const unit = allUnits.find(u => u.id === unitId);
+  if (!unit || !unit.photo) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-overlay';
+  overlay.onclick = () => overlay.remove();
+  const img = document.createElement('img');
+  img.src = unit.photo;
+  img.className = 'photo-full';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+}
+
 function cancelEdit() {
   editingUnitId = null;
   selectedPhoto = null;
@@ -344,7 +357,7 @@ function renderTable(searchQuery) {
       const vals = (unit.fields && unit.fields[f.name]) || [];
       return `<td>${escapeHtml(vals.join(', '))}</td>`;
     }).join('');
-    const photoTd = hasPhoto ? `<td>${unit.photo ? `<img src="${unit.photo}" style="width:50px;height:50px;object-fit:cover;border-radius:4px">` : ''}</td>` : '';
+    const photoTd = hasPhoto ? `<td>${unit.photo ? `<img src="${unit.photo}" class="table-photo" onclick="showPhoto('${unit.id}')">` : ''}</td>` : '';
     return `<tr>
       <td>${escapeHtml(unit.itemName)}</td>
       ${cells}
