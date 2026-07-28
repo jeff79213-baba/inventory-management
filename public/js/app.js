@@ -402,9 +402,10 @@ async function deleteUnit(id) {
   }
 }
 
-function showInlineInput(container, placeholder, onSave) {
-  const addBtn = container.querySelector('.capsule-add');
+function showInlineInput(container, placeholder, onSave, selector) {
+  const addBtn = container.querySelector(selector || '.capsule-add');
   if (!addBtn) return;
+  const origClass = addBtn.className;
   const input = document.createElement('input');
   input.className = 'capsule-input';
   input.placeholder = placeholder;
@@ -417,9 +418,9 @@ function showInlineInput(container, placeholder, onSave) {
       await onSave(val);
     }
     const newBtn = document.createElement('button');
-    newBtn.className = 'capsule-add';
+    newBtn.className = origClass;
     newBtn.textContent = '+';
-    newBtn.onclick = () => showInlineInput(container, placeholder, onSave);
+    newBtn.onclick = () => showInlineInput(container, placeholder, onSave, selector);
     input.replaceWith(newBtn);
   };
   input.onkeydown = (e) => {
@@ -430,6 +431,7 @@ function showInlineInput(container, placeholder, onSave) {
 }
 
 function openAddItemName() {
+  const sel = currentMode === 'settings' ? '.capsule-add-items' : '.capsule-add';
   showInlineInput(document.getElementById('capsuleArea'), '輸入品項名稱', async (name) => {
     try {
       await DB.instance.collection(DB.ITEMS).doc(name).set({
@@ -442,7 +444,7 @@ function openAddItemName() {
       console.error('新增品項失敗:', e);
       showStatus('✗ 新增失敗', 'error');
     }
-  });
+  }, sel);
 }
 
 /* ============================================================
@@ -469,12 +471,12 @@ function renderSettingsCapsules(area, query) {
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:4px;width:100%">
       <span style="font-size:0.8rem;color:var(--gray-500);font-weight:600;margin-right:4px">品項</span>
       ${itemCaps}
-      <button class="capsule-add" onclick="openAddItemName()">+</button>
+      <button class="capsule-add capsule-add-items" onclick="openAddItemName()">+</button>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:100%">
       <span style="font-size:0.8rem;color:var(--gray-500);font-weight:600;margin-right:4px">欄位</span>
       ${fieldCaps}
-      <button class="capsule-add" onclick="openAddField()">+</button>
+      <button class="capsule-add capsule-add-fields" onclick="openAddField()">+</button>
     </div>
   `;
 }
@@ -654,7 +656,7 @@ function openAddField() {
       console.error('新增欄位失敗:', e);
       showStatus('✗ 新增失敗', 'error');
     }
-  });
+  }, '.capsule-add-fields');
 }
 
 function editOptionText(span, index) {
