@@ -87,12 +87,23 @@ function renderCapsules(query) {
   const filtered = q
     ? allItems.filter(item => item.name.toLowerCase().includes(q))
     : allItems;
-  area.innerHTML = filtered.map(item => `
+  const allCapsule = `<div class="capsule ${!selectedItemName ? 'active' : ''}" onclick="selectAllItems()" title="顯示全部資料">全部顯示</div>`;
+  area.innerHTML = allCapsule + filtered.map(item => `
     <div class="capsule ${selectedItemName === item.name ? 'active' : ''}"
          onclick="selectItemName('${escapeHtml(item.name)}')">
       ${escapeHtml(item.name)}
     </div>
   `).join('') + `<button class="capsule-add" onclick="openAddItemName()">+</button>`;
+}
+
+function selectAllItems() {
+  selectedItemName = null;
+  selectedAttrs = {};
+  document.getElementById('fieldSelectArea').style.display = 'none';
+  document.getElementById('inputArea').style.display = 'none';
+  document.getElementById('inputArea').innerHTML = '';
+  renderCapsules(document.getElementById('searchInput').value);
+  renderTable();
 }
 
 function selectItemName(name) {
@@ -290,15 +301,16 @@ function renderTable() {
   if (currentMode !== 'inventory') return;
   const area = document.getElementById('tableArea');
   const visibleFields = allFields.filter(f => f.showInList);
-  if (allUnits.length === 0) {
-    area.innerHTML = '<div class="empty-state">尚無存入資料</div>';
+  const filteredUnits = selectedItemName ? allUnits.filter(u => u.itemName === selectedItemName) : allUnits;
+  if (filteredUnits.length === 0) {
+    area.innerHTML = `<div class="empty-state">${selectedItemName ? `「${escapeHtml(selectedItemName)}」尚無資料` : '尚無存入資料'}</div>`;
     area.style.display = 'block';
     return;
   }
-  const hasPhoto = allUnits.some(u => u.photo);
+  const hasPhoto = filteredUnits.some(u => u.photo);
   const headers = visibleFields.map(f => `<th>${escapeHtml(f.name)}</th>`).join('');
   const photoTh = hasPhoto ? '<th>照片</th>' : '';
-  const rows = allUnits.map(unit => {
+  const rows = filteredUnits.map(unit => {
     const cells = visibleFields.map(f => {
       const vals = (unit.fields && unit.fields[f.name]) || [];
       return `<td>${escapeHtml(vals.join(', '))}</td>`;
