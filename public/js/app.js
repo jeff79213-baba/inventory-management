@@ -108,16 +108,22 @@ function selectAllItems() {
 
 function selectItemName(name) {
   if (selectedItemName === name) {
-    selectedItemName = null;
-    selectedAttrs = {};
-    document.getElementById('fieldSelectArea').style.display = 'none';
-    document.getElementById('inputArea').style.display = 'none';
+    const fieldArea = document.getElementById('fieldSelectArea');
+    if (fieldArea.style.display !== 'none') {
+      fieldArea.style.display = 'none';
+      document.getElementById('inputArea').style.display = 'none';
+      document.getElementById('inputArea').innerHTML = '';
+    } else {
+      selectedAttrs = {};
+      renderFieldSelectArea();
+    }
   } else {
     selectedItemName = name;
     selectedAttrs = {};
     renderFieldSelectArea();
   }
   renderCapsules(document.getElementById('searchInput').value);
+  renderTable();
 }
 
 function renderFieldSelectArea() {
