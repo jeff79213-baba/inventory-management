@@ -217,7 +217,7 @@ function handlePhotoSelect(e) {
   reader.onload = function(ev) {
     const img = new Image();
     img.onload = function() {
-      const maxW = 1200, maxH = 1200;
+      const maxW = 1600, maxH = 1600;
       let w = img.width, h = img.height;
       if (w > maxW) { h = h * maxW / w; w = maxW; }
       if (h > maxH) { w = w * maxH / h; h = maxH; }
@@ -225,7 +225,7 @@ function handlePhotoSelect(e) {
       c.width = w; c.height = h;
       const ctx = c.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      selectedPhoto = c.toDataURL('image/jpeg', 0.92);
+      selectedPhoto = c.toDataURL('image/jpeg', 0.95);
       document.getElementById('photoPreview').innerHTML = `<img src="${selectedPhoto}" style="max-width:150px;max-height:150px;border-radius:6px;border:1px solid #ddd">`;
     };
     img.src = ev.target.result;
