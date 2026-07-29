@@ -217,7 +217,7 @@ function handlePhotoSelect(e) {
   reader.onload = function(ev) {
     const img = new Image();
     img.onload = function() {
-      const maxW = 300, maxH = 300;
+      const maxW = 1200, maxH = 1200;
       let w = img.width, h = img.height;
       if (w > maxW) { h = h * maxW / w; w = maxW; }
       if (h > maxH) { w = w * maxH / h; h = maxH; }
@@ -225,7 +225,7 @@ function handlePhotoSelect(e) {
       c.width = w; c.height = h;
       const ctx = c.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      selectedPhoto = c.toDataURL('image/jpeg', 0.6);
+      selectedPhoto = c.toDataURL('image/jpeg', 0.92);
       document.getElementById('photoPreview').innerHTML = `<img src="${selectedPhoto}" style="max-width:150px;max-height:150px;border-radius:6px;border:1px solid #ddd">`;
     };
     img.src = ev.target.result;
@@ -669,6 +669,8 @@ async function deleteField(encodedId) {
   try {
     await DB.instance.collection(DB.FIELDS).doc(id).delete();
     allFields = allFields.filter(f => f.id !== id);
+    if (currentSelection === id) { currentSelection = null; }
+    renderSettingsCapsules(document.getElementById('capsuleArea'), document.getElementById('searchInput').value);
     renderFieldList(document.getElementById('settingsArea'));
     showStatus('✓ 已刪除', 'success');
   } catch (e) {
