@@ -238,11 +238,23 @@ function showPhoto(unitId) {
   if (!unit || !unit.photo) return;
   const overlay = document.createElement('div');
   overlay.className = 'photo-overlay';
-  overlay.onclick = () => overlay.remove();
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
   const img = document.createElement('img');
   img.src = unit.photo;
   img.className = 'photo-full';
-  overlay.appendChild(img);
+  let scale = 1;
+  function zoom(d) { scale = Math.max(0.5, Math.min(5, scale + d)); img.style.transform = `scale(${scale})`; }
+  overlay.onwheel = (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? -0.2 : 0.2); };
+  const controls = document.createElement('div');
+  controls.className = 'photo-controls';
+  const zoomIn = document.createElement('button'); zoomIn.className = 'photo-btn'; zoomIn.textContent = '+';
+  zoomIn.onclick = (e) => { e.stopPropagation(); zoom(0.5); };
+  const zoomOut = document.createElement('button'); zoomOut.className = 'photo-btn'; zoomOut.textContent = '−';
+  zoomOut.onclick = (e) => { e.stopPropagation(); zoom(-0.5); };
+  const closeBtn = document.createElement('button'); closeBtn.className = 'photo-btn photo-close'; closeBtn.textContent = '✕';
+  closeBtn.onclick = (e) => { e.stopPropagation(); overlay.remove(); };
+  controls.append(zoomOut, zoomIn, closeBtn);
+  overlay.append(img, controls);
   document.body.appendChild(overlay);
 }
 
@@ -565,10 +577,9 @@ function renderSettingsPanel() {
       <div class="option-list" id="optionList">${optionTags}</div>
       <div class="add-row">
         <div class="form-group">
-          <label class="form-label">新增選項（用 - 分隔）</label>
-          <input type="text" id="newOptionsText" class="form-input" placeholder="選項A-選項B-選項C">
+          <label class="form-label">新增選項（用 - 分隔，Enter 加入）</label>
+          <input type="text" id="newOptionsText" class="form-input" placeholder="選項A-選項B-選項C" onkeydown="if(event.key==='Enter'){event.preventDefault();addOptions()}">
         </div>
-        <button class="btn btn-primary btn-sm" onclick="addOptions()" style="margin-bottom:16px">+ 加入</button>
       </div>
     </div>
   `;
@@ -591,10 +602,7 @@ function renderFieldList(area) {
 
   area.innerHTML = `
     <div class="field-list">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-weight:600;font-size:1rem">欄位設定</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddField()">+ 新增欄位</button>
-      </div>
+      <div style="font-weight:600;font-size:1rem;margin-bottom:12px">欄位設定</div>
       <div id="fieldListContainer">${items}</div>
     </div>
     <div class="field-list">

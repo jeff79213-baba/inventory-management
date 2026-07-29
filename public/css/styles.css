@@ -105,7 +105,20 @@ body {
 .photo-full {
   max-width: 90vw; max-height: 90vh; border-radius: 8px;
   box-shadow: 0 4px 24px rgba(0,0,0,.4);
+  transition: transform .15s;
 }
+.photo-controls {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; z-index: 10000;
+}
+.photo-btn {
+  width: 40px; height: 40px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,.9); color: #333;
+  font-size: 1.3rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  display: flex; align-items: center; justify-content: center;
+}
+.photo-btn:hover { background: #fff; }
+.photo-close { font-size: 1rem; }
 .capsule-input {
   display: inline-flex;
   align-items: center;
