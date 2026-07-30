@@ -760,6 +760,7 @@ function addOptions() {
   field.options.push(...newOpts);
   document.getElementById('newOptionsText').value = '';
   renderSettingsPanel();
+  saveFieldOptions();
 }
 
 async function saveFieldOptions() {
