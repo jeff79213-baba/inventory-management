@@ -11,6 +11,16 @@ let settingsSelectedItem = null;
 let _dragSrcIndex = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (navigator.userAgent.includes('Line')) {
+    document.body.innerHTML = `<div style="text-align:center;padding:40px 20px;font-family:sans-serif">
+      <h2 style="font-size:1.2rem;margin-bottom:16px">請使用瀏覽器開啟</h2>
+      <p style="color:#666;margin-bottom:20px">LINE 內建瀏覽器可能無法正常顯示，請點右上角「⋯」選擇「在瀏覽器中開啟」</p>
+      <a href="#" onclick="window.open(this.href,'_system');return false" style="color:var(--primary);text-decoration:underline">
+        或點此在瀏覽器開啟
+      </a>
+    </div>`;
+    return;
+  }
   await loadAllData();
   renderCapsules();
   renderTable();
