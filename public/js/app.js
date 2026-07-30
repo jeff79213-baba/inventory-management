@@ -572,7 +572,6 @@ function renderSettingsPanel() {
       <div class="panel-header">
         <div class="panel-title">${escapeHtml(field.name)} — 選項管理</div>
         <button class="btn btn-outline btn-sm" onclick="currentSelection=null;renderSettingsPanel()">← 返回欄位列表</button>
-        <button class="btn btn-primary btn-sm" onclick="saveFieldOptions()">儲存選項</button>
       </div>
       <div class="option-list" id="optionList">${optionTags}</div>
       <div class="add-row">
