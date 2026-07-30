@@ -577,8 +577,11 @@ function renderSettingsPanel() {
       <div class="option-list" id="optionList">${optionTags}</div>
       <div class="add-row">
         <div class="form-group">
-          <label class="form-label">新增選項（用 - 分隔，Enter 加入）</label>
-          <input type="text" id="newOptionsText" class="form-input" placeholder="選項A-選項B-選項C" onkeydown="if(event.key==='Enter'){event.preventDefault();addOptions()}">
+          <label class="form-label">新增選項（用 - 分隔）</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="newOptionsText" class="form-input" placeholder="選項A-選項B-選項C" onkeydown="if(event.key==='Enter'){event.preventDefault();addOptions()}">
+            <button class="btn btn-primary btn-sm" onclick="addOptions()" style="white-space:nowrap">+</button>
+          </div>
         </div>
       </div>
     </div>
